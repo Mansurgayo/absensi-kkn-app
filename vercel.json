@@ -1,6 +1,5 @@
 {
-  "root": "absensi-kkn-app",
-  "builds": [
-    { "src": "package.json", "use": "@vercel/next" }
-  ]
+  "buildCommand": "cd absensi-kkn-app && npm run build",
+  "outputDirectory": "absensi-kkn-app/.next"
 }
+
