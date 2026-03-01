@@ -1,32 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Absensi KKN App
 
-## Getting Started
+A Next.js application for managing attendance during KKN, equipped with
+admin dashboards, PDF reports, user authentication, and Prisma ORM.
 
-First, install dependencies and start the custom server which combines Next.js with an Express endpoint for PDF generation:
+## Setup (Local Development)
 
-```bash
-npm install
-npm run dev
-```
+1. **Copy environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your DATABASE_URL (SQLite for dev or PostgreSQL for prod)
+   ```
 
-The `dev` script now launches `server.js`, an Express app integrated with Next.js. It exposes `/admin/attendance-report` to generate a PDF using PDFKit.
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Install deps & generate Prisma client**
+   ```bash
+   npm install
+   npx prisma generate
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Create/migrate database**
+   For SQLite (default):
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+   For PostgreSQL (recommended before deploying):
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+   _This will create SQL migrations under `prisma/migrations`._
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Add an admin user**
 
-## Learn More
+   You can seed an administrator account in whichever database you are
+   currently pointing at via `DATABASE_URL`.
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   # local development (SQLite is default)
+   EMAIL=admin@example.com PASSWORD=pass123 NAME="Admin" npm run create-admin
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   # or, to write directly to your production Postgres database:
+   DATABASE_URL="postgres://user:pass@host:5432/dbname" \
+     EMAIL=admin@example.com PASSWORD=pass123 NAME="Admin" npm run create-admin
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   The script will create the user or update it if it already exists. Once
+   the account exists you can log in at `/login` with the specified email
+   and password.
 
-## Deploy on Vercel
+5. **Run the app**
+   ```bash
+   npm run dev
+   # or production build
+   npm run build && npm start
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Browse http://localhost:3000 to access the site. Login as admin
+to access `/admin/dashboard` and generate PDF reports.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Environment Variables
+
+| Name         | Example                                                   | Description                     |
+|--------------|-----------------------------------------------------------|---------------------------------|
+| DATABASE_URL | `postgres://user:pass@host:5432/dbname` or `file:./prisma/dev.db` | Prisma connection string        |
+
+Secrets (e.g. JWT, cookies) can also be added to `.env` and to
+Vercel's settings.
+
+## Deployment to Vercel
+
+1. **Connect GitHub repo** to Vercel and set **Root Directory** to the
+   workspace root (it already contains the app after consolidation).
+2. **Set environment variables** in Vercel (at least `DATABASE_URL`).
+   Prefer a managed PostgreSQL database for production.
+3. **Push changes**; Vercel will run `npm install`, `prisma migrate deploy`,
+   and `npm run build` automatically.
+
+Sample `vercel.json` is provided to ensure proper build
+configuration.
+
+### Notes for Production
+
+* Do **not** use SQLite in production; deploy a cloud DB.
+* Ensure Prisma migrations have been applied (`prisma migrate deploy`).
+* The admin account must be created via script or manually in the DB.
+
+## Useful Scripts
+
+| Command            | Description                            |
+|--------------------|----------------------------------------|
+| `npm run dev`      | Start development server               |
+| `npm run build`    | Build for production (runs migrations) |
+| `npm run start`    | Run built app                          |
+| `npm run create-admin` | Create/update admin user             |
+
+---
+
+Happy deploying!
+
